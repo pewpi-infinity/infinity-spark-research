@@ -11,6 +11,10 @@ export type WorldArchetype =
   | 'quantum-playground'
   | 'emulator-dock'
   | 'dreamscape-architect'
+  | 'time-travel-1920s'
+  | 'time-travel-1960s'
+  | 'time-travel-1980s'
+  | 'time-travel-2050s'
 
 export interface WorldTypeDefinition {
   id: WorldArchetype
@@ -143,10 +147,50 @@ export const WORLD_ARCHETYPES: Record<WorldArchetype, WorldTypeDefinition> = {
     baseValue: 1400,
     primaryColor: 'oklch(0.70 0.15 320)',
     tools: ['emotion-mapper', 'symbol-builder', 'dreamscape-canvas']
+  },
+  'time-travel-1920s': {
+    id: 'time-travel-1920s',
+    name: 'Time Travel Lab: Roaring Twenties',
+    emoji: '🎺',
+    description: 'Explore the Jazz Age, prohibition era, and cultural revolution of the 1920s',
+    educationalGoal: 'Teaches history through immersive time travel, cultural context, social change',
+    baseValue: 1600,
+    primaryColor: 'oklch(0.75 0.18 50)',
+    tools: ['time-travel-lab', 'historical-events', 'cultural-artifacts']
+  },
+  'time-travel-1960s': {
+    id: 'time-travel-1960s',
+    name: 'Time Travel Lab: Revolutionary Sixties',
+    emoji: '☮️',
+    description: 'Navigate the civil rights movement, space race, and counterculture of the 1960s',
+    educationalGoal: 'Teaches social movements, technological advancement, cultural transformation',
+    baseValue: 1600,
+    primaryColor: 'oklch(0.65 0.20 180)',
+    tools: ['time-travel-lab', 'movement-tracker', 'space-timeline']
+  },
+  'time-travel-1980s': {
+    id: 'time-travel-1980s',
+    name: 'Time Travel Lab: Digital Dawn',
+    emoji: '📼',
+    description: 'Experience the birth of personal computing, arcade culture, and MTV generation',
+    educationalGoal: 'Teaches technology history, media evolution, digital culture emergence',
+    baseValue: 1600,
+    primaryColor: 'oklch(0.70 0.22 320)',
+    tools: ['time-travel-lab', 'tech-evolution', 'pop-culture-map']
+  },
+  'time-travel-2050s': {
+    id: 'time-travel-2050s',
+    name: 'Time Travel Lab: Future Scenarios',
+    emoji: '🚀',
+    description: 'Explore potential futures - climate solutions, AI integration, space colonization',
+    educationalGoal: 'Teaches future thinking, scenario planning, ethical consideration',
+    baseValue: 1700,
+    primaryColor: 'oklch(0.60 0.18 260)',
+    tools: ['time-travel-lab', 'scenario-builder', 'future-predictor']
   }
 }
 
-export const SLOT_EMOJIS = ['🎰', '🍄', '⚙️', '📀', '👑', '🧲', '🧠', '🎬', '🌌', '🕹️', '💭', '🧵']
+export const SLOT_EMOJIS = ['🎰', '🍄', '⚙️', '📀', '👑', '🧲', '🧠', '🎬', '🌌', '🕹️', '💭', '🧵', '🎺', '☮️', '📼', '🚀']
 
 export interface SlotCombination {
   emojis: [string, string, string]
@@ -202,7 +246,11 @@ function getArchetypeFromEmoji(emoji: string): WorldArchetype {
     '🌌': 'quantum-playground',
     '🕹️': 'emulator-dock',
     '💭': 'dreamscape-architect',
-    '🧵': 'world-stitcher'
+    '🧵': 'world-stitcher',
+    '🎺': 'time-travel-1920s',
+    '☮️': 'time-travel-1960s',
+    '📼': 'time-travel-1980s',
+    '🚀': 'time-travel-2050s'
   }
   
   return mapping[emoji] || 'research-library'

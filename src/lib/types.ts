@@ -23,6 +23,9 @@ export type ToolPrimitive =
   | 'search'
   | 'analytics'
   | 'content-hub'
+  | 'time-travel-lab'
+  | 'emotion-visualizer'
+  | 'world-trading'
 
 export interface ToolComponent {
   id: string

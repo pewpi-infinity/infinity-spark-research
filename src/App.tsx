@@ -9,16 +9,16 @@ import {
   calculateWebsiteValue,
   generateWorldContent,
   generatePageContent,
-  generateTransactionId
+  generateTransactionId,
+  generateWebsiteContent
 } from '@/lib/generators'
 import { CosmicBackground } from '@/components/CosmicBackground'
-import { HomeView } from '@/components/views/HomeView'
+import { EntryView } from '@/components/views/EntryView'
+import { InfinityHubView } from '@/components/views/InfinityHubView'
 import { WebsiteView } from '@/components/views/WebsiteView'
 import { WalletView } from '@/components/views/WalletView'
 import { MarketplaceView } from '@/components/views/MarketplaceView'
-import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
-import { Wallet as WalletIcon, Storefront, House } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 function App() {
@@ -48,6 +48,83 @@ function App() {
     setWallet(newWallet)
     toast.success('Wallet created automatically!')
     return newWallet
+  }
+
+  const handleSearchCreate = async (query: string) => {
+    setIsCreating(true)
+    
+    try {
+      const currentWallet = ensureWallet()
+      
+      const { title, description, content, tools } = await generateWebsiteContent(query, currentWallet.address)
+      
+      const websiteId = generateWebsiteId()
+      const tokenId = generateTokenId()
+      
+      const newWebsite: Website = {
+        id: websiteId,
+        tokenId,
+        title,
+        description,
+        query: query,
+        content,
+        url: `https://infinity.spark/${websiteId}`,
+        ownerWallet: currentWallet.address,
+        value: 1000,
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        pages: [],
+        tools,
+        theme: 'cosmic',
+        collaborators: [{
+          wallet: currentWallet.address,
+          role: 'owner',
+          addedAt: Date.now(),
+          addedBy: currentWallet.address
+        }],
+        isListedForSale: false,
+        uniquenessScore: 1.0,
+        activeBuildTime: 0
+      }
+      
+      newWebsite.value = calculateWebsiteValue(newWebsite)
+
+      const newToken: Token = {
+        id: tokenId,
+        websiteId,
+        websiteUrl: newWebsite.url,
+        ownerWallet: currentWallet.address,
+        value: newWebsite.value,
+        createdAt: Date.now(),
+        metadata: {
+          title,
+          description,
+          query: query,
+          toolCount: tools.length
+        }
+      }
+
+      setWebsites((current) => [...(current || []), newWebsite])
+      
+      setWallet((currentWallet) => {
+        if (!currentWallet) return null
+        return {
+          ...currentWallet,
+          balance: currentWallet.balance + newWebsite.value,
+          tokens: [...currentWallet.tokens, newToken]
+        }
+      })
+
+      toast.success(`${title} created with ${tools.length} tools!`)
+      
+      setSelectedWebsiteId(websiteId)
+      setViewMode('website')
+    } catch (error) {
+      console.error('Error creating website:', error)
+      toast.error('Failed to create website. Please try again.')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const handleCreateWorld = async (archetype: WorldArchetype, rarityMultiplier: number, slotCombination: string) => {
@@ -397,9 +474,13 @@ function App() {
     setViewMode('website')
   }
 
-  const handleBack = () => {
+  const handleBackToEntry = () => {
     setViewMode('home')
     setSelectedWebsiteId(null)
+  }
+
+  const handleEnterHub = () => {
+    setViewMode('builder')
   }
 
   return (
@@ -408,38 +489,29 @@ function App() {
       <Toaster position="top-right" />
       
       {viewMode === 'home' && (
-        <>
-          <nav className="absolute top-0 right-0 p-4 md:p-6 z-20 max-w-full">
-            {wallet && (
-              <div className="flex flex-wrap gap-2 md:gap-3 justify-end">
-                <Button
-                  variant="outline"
-                  className="cosmic-border gap-2"
-                  onClick={() => setViewMode('wallet')}
-                >
-                  <WalletIcon size={20} />
-                  <span className="hidden sm:inline">Wallet</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="cosmic-border gap-2"
-                  onClick={() => setViewMode('marketplace')}
-                >
-                  <Storefront size={20} />
-                  <span className="hidden sm:inline">Marketplace</span>
-                </Button>
-              </div>
-            )}
-          </nav>
-          <HomeView onCreateWorld={handleCreateWorld} isCreating={isCreating} />
-        </>
+        <EntryView
+          onSearch={handleSearchCreate}
+          onEnterInfinity={handleEnterHub}
+          isSearching={isCreating}
+        />
+      )}
+
+      {viewMode === 'builder' && (
+        <InfinityHubView
+          websites={websites || []}
+          wallet={wallet || null}
+          onBack={handleBackToEntry}
+          onViewWebsite={handleViewWebsite}
+          onCreateWithSlot={handleCreateWorld}
+          isCreating={isCreating}
+        />
       )}
 
       {viewMode === 'website' && selectedWebsite && (
         <WebsiteView
           website={selectedWebsite}
           isOwned={!!isWebsiteOwned}
-          onBack={handleBack}
+          onBack={handleBackToEntry}
           onAddPage={handleAddPage}
           isAddingPage={isAddingPage}
           onListForSale={handleListForSale}
@@ -452,7 +524,7 @@ function App() {
       {viewMode === 'wallet' && wallet && (
         <WalletView
           wallet={wallet}
-          onBack={handleBack}
+          onBack={handleBackToEntry}
           onViewWebsite={handleViewWebsite}
         />
       )}
@@ -461,24 +533,10 @@ function App() {
         <MarketplaceView
           websites={websites || []}
           currentWallet={wallet || null}
-          onBack={handleBack}
+          onBack={handleBackToEntry}
           onViewWebsite={handleViewWebsite}
           onPurchase={handlePurchaseWebsite}
         />
-      )}
-
-      {viewMode !== 'home' && (
-        <Button
-          variant="ghost"
-          className="fixed bottom-6 right-6 cosmic-glow gap-2"
-          onClick={() => {
-            setViewMode('home')
-            setSelectedWebsiteId(null)
-          }}
-        >
-          <House size={20} />
-          Home
-        </Button>
       )}
     </div>
   )
